@@ -1,5 +1,3 @@
-﻿1  Marcos Cáceres García 
-
 # Despliegue de una arquitectura EFS- EC2-MultiAZ. 
 
 ### Marcos Cáceres García 
@@ -126,3 +124,39 @@ ProxyPassReverse / balancer://clusterasir/ <Location /balancer-manager>
 Una vez guardemos y cerremos el archivo y reiniciemos la máquina, podemos verificar que todo funciona bien poniendo la IP del balanceador de carga+balancer-manager. 
 
 Y ahora sí podemos poner la IP del balanceador de carga y se nos abrirá la página web que no esta siendo ejecutada por nuestros balanceador si no por las máquinas. 
+
+### Instalación de php.
+Para que nuestras máquinas ec2 puedan leer archivos php debemos instalarles php con los siguientes comandos:
+```
+$ sudo yum install -y amazon-linux-extras
+$ sudo yum update
+$ sudo amazon-linux-extras | grep php
+$ sudo amazon-linux-extras enable php8.0
+$ sudo yum clean metadata
+$ sudo yum install php-cli php-pdo php-fpm php-json php-mysqlnd php-gd
+```
+Una vez hecho esto debemos crear en la carpeta del punto de montaje un archivo php con el nombre "prueba.php" que nos servirá para verificar que php se ha instalado correctamnte poniendo la ip de una de las máquinas y prueba.php:
+![text](./PHP%208.0.27%20-%20phpinfo()%20-%20Opera%2013_02_2023%2012_49_30.png)
+
+### Creación de los archivos php.
+
+Para empezar vamos a /var/www/html/efs-mount y creamos los archivos de grabar.php, conexion.php y formulario.php con los siguientes códigos:
+![text](Screenshot%2013_02_2023%2012_52_38.png)
+![text](EC2%20Instance%20Connect%20-%20Opera%2013_02_2023%2012_52_56.png)
+
+![alt](EC2%20Instance%20Connect%20-%20Opera%2013_02_2023%2012_54_51.png)
+
+![alt](EC2%20Instance%20Connect%20-%20Opera%2013_02_2023%2012_55_48.png)
+
+### Creación de la base de datos.
+Ahora debemos crear la RDS que almacenará la información de las donaciónes, para ello vamos a la pestañas de RDS y la creamos con la opción de producción y con la opción de despliegue multi A-Z y le creamos un grupo de seguridad en el cual estará abierto el puerto 3306 y accesible públicamente:
+![alt](Screenshot%2013_02_2023%2012_59_45.png)
+
+Y ahora nos conectamos a nuestra base de datos con el cliente heidi sql para crear una base de datos llamada cluster y en la cual solo crearemos una tabla que se llamará donaciónes:
+![alt](Screenshot%2013_02_2023%2013_02_40.png)
+
+Una vez creada la base de datos debemos securizarla para que solo las ec2 con el SGweb puedan acceder a ella.
+
+### Testeo de la página.
+Para testear la página ponemos la IP pública de nuestro balanceador y pulsamos en el enlace de donaciones y añadimos los datos que queramos, una vez hecho esto y pulsando en enviar debemos ver esto:
+![alt](Unnamed_cluster_%20-%20HeidiSQL%2012.3.0.6589%2013_02_2023%2013_05_22.png)
